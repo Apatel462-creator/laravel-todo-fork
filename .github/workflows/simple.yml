@@ -33,5 +33,6 @@ jobs:
       - name: Run a multi-line script
         run: |
           COMMIT_MESSAGE=${{ github.event.head_commit.message }}
+          echo $COMMIT_MESSAGE
           cd scripts
           bash comment_checker.sh "$COMMIT_MESSAGE"

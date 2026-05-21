@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-commit_message="$1"
+commit_message=$(cat "$1")
 
 allowed_prefixes="^(feat|fix|docs|chore|test|refactor):" 
 

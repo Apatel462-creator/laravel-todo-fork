@@ -11,7 +11,7 @@ class TodoController extends Controller
      * Display all todos
      */
     public function index(Request $request)
-    
+    {
         $query = Todo::query();
 
         // Search
