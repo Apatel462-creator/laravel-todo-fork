@@ -2,6 +2,12 @@
 
 commit_message="$i"
 
+# Skip merge commits
+if [[ $commit_message == Merge* ]]; then
+    echo "Skipping merge commit"
+    exit 0
+fi
+
 allowed_prefixes="^(feat|fix|docs|chore|test|refactor):" 
 
 if [[ $commit_message =~ $allowed_prefixes ]]; then 
