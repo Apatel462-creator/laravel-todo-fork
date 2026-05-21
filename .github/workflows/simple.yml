@@ -38,9 +38,7 @@ jobs:
           echo "Triggered By: ${{ github.actor }}"
           pwd
           ls
-          cd ..
-          cd ..
-          ls
+          echo "hi"
           cd scripts
           ll
           sh comment_checker.sh
