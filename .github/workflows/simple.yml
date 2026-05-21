@@ -35,7 +35,6 @@ jobs:
       - name: Run a multi-line script
         run: |
                 COMMITS=$(git log ${{ github.event.before }}..${{ github.sha }} --pretty="%s")
-
                 echo "$COMMITS"
 
                 while IFS= read -r commit
