@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ "main"]
   pull_request:
     branches: [ "main" ]
 
@@ -32,12 +32,6 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
-          echo "Course Name: $COURSE"
-          echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Triggered By: ${{ github.actor }}"
-          pwd
-          ls
-          echo "hi"
+          COMMIT_MESSAGE=${{ github.event.head_commit.message }}
           cd scripts
-           sh comment_checker.sh
+          bash comment_checker.sh "$COMMIT_MESSAGE"
