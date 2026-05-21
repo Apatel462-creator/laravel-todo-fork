@@ -32,7 +32,12 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
-          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          echo $COMMIT_MESSAGE
-          cd scripts
-          bash comment_checker.sh "$COMMIT_MESSAGE"
+              COMMITS=$(git log origin/main..HEAD --pretty=%B)
+              echo "$COMMITS"
+              while IFS= read -r commit
+              do
+                if [ -n "$commit" ]; then
+                  bash scripts/comment_checker.sh "$commit"
+                  cd ..
+              fi
+              done <<< "$COMMITS"
