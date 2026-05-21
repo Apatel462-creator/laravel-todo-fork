@@ -2,6 +2,9 @@
 
 commit_message="$i"
 
+echo "asdasdDSD"
+echo $commit_message
+
 # Skip merge commits
 if [[ $commit_message == Merge* ]]; then
     echo "Skipping merge commit"
