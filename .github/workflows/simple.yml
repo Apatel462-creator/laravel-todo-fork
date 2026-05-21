@@ -40,5 +40,4 @@ jobs:
           ls
           echo "hi"
           cd scripts
-          ll
-          sh comment_checker.sh
+           sh comment_checker.sh
