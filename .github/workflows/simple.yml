@@ -38,6 +38,8 @@ jobs:
               echo "$COMMITS"
               while IFS= read -r commit
               do
+                echo "hfghfg"
+                echo "$COMMITS"
                 if [ -n "$commit" ]; then
                   bash scripts/comment_checker.sh "$commit"
                   cd ..
