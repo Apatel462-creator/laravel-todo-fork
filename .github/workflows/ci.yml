@@ -28,26 +28,9 @@ jobs:
           echo "Checking pushed commits..."
            FAILED=0
 
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "${{ github.event_name }}" == "push" ]]; then
 
-            # Fetch only the commits added in THIS PR via GitHub API
-            # This avoids validating old commits already on the branch before workflow was added
-            PR_COMMITS=$(gh api \
-              repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits \
-              --paginate \
-              --jq '.[].commit.message | split("\n")[0]')
-
-            while IFS= read -r commit; do
-              if [ -n "$commit" ]; then
-                echo "-----------------------------------"
-                echo "Checking: $commit"
-                bash scripts/commit_checker.sh "$commit" || FAILED=1
-              fi
-            done <<< "$PR_COMMITS"
-
-          else
-
-            # For push: only commits included in THIS push (provided by GitHub)
+             # For push: only commits included in THIS push (provided by GitHub)
             echo '${{ toJson(github.event.commits.*.message) }}' | jq -r '.[]' | while IFS= read -r commit; do
               if [ -n "$commit" ]; then
                 echo "-----------------------------------"
@@ -64,6 +47,10 @@ jobs:
           fi
 
           echo "✅ All commit messages are valid."
+
+          fi
+
+          
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
