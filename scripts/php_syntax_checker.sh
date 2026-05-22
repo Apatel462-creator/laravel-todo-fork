@@ -7,6 +7,7 @@ EXCLUDE_ARGS=()
 
 if [ -f ".gitignore" ]; then
   while IFS= read -r line; do
+
     # Skip empty lines and comments
     [[ -z "$line" || "$line" == \#* ]] && continue
 
@@ -14,12 +15,12 @@ if [ -f ".gitignore" ]; then
     line="${line%/}"
     line="${line#/}"
 
-    # Skip wildcard patterns (find can't handle globs like storage/*.key)
+    # Skip wildcard patterns
     [[ "$line" == *"*"* ]] && continue
 
-    # Skip pure file entries (no directory, has extension e.g. .env, Homestead.yaml)
-    # We only want to prune directories/paths for PHP scanning purposes
+    # Skip pure file entries
     basename="${line##*/}"
+
     if [[ "$basename" == *.* && "$basename" != "*" ]]; then
       continue
     fi
@@ -33,21 +34,48 @@ if [ -f ".gitignore" ]; then
   done < ".gitignore"
 fi
 
-# Find all .php files, excluding gitignore dirs
-if [ ${#EXCLUDE_ARGS[@]} -gt 0 ]; then
-  FILES=$(find . \( "${EXCLUDE_ARGS[@]}" \) -o -type f -name "*.php" -print)
-else
-  FILES=$(find . -type f -name "*.php" -print)
+# Get only added/copied/modified PHP files
+CHANGED_FILES=$(git diff --name-only --diff-filter=ACM origin/main...HEAD | grep '\.php$')
+
+if [ -z "$CHANGED_FILES" ]; then
+  echo "No changed PHP files found."
+  exit 0
 fi
 
-if [ -z "$FILES" ]; then
-  echo "No PHP files found."
+# Apply existing exclude logic
+FILTERED_FILES=""
+
+while IFS= read -r file
+do
+
+  skip=false
+
+  for arg in "${EXCLUDE_ARGS[@]}"
+  do
+    if [[ "$file" == ${arg#./}* ]]; then
+      skip=true
+      break
+    fi
+  done
+
+  if [ "$skip" = false ]; then
+    FILTERED_FILES+="$file"$'\n'
+  fi
+
+done <<< "$CHANGED_FILES"
+
+if [ -z "$FILTERED_FILES" ]; then
+  echo "No valid PHP files to check."
   exit 0
 fi
 
 FAILED=0
 
-while IFS= read -r file; do
+while IFS= read -r file
+do
+
+  [ -z "$file" ] && continue
+
   echo "Checking: $file"
 
   php -l "$file" > /dev/null 2>&1
@@ -58,7 +86,7 @@ while IFS= read -r file; do
     FAILED=1
   fi
 
-done <<< "$FILES"
+done <<< "$FILTERED_FILES"
 
 if [ "$FAILED" -eq 1 ]; then
   echo "❌ PHP syntax validation failed."

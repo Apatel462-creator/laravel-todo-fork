@@ -29,10 +29,7 @@ class TodoController extends Controller
             $query->where('priority', $request->priority);
         }
 
-        $todos = $query
-            ->orderBy('id')
-            ->latest()
-            ->paginate(10);
+        $todos = $query->orderBy('id')->latest()->paginate(10);
 
         return view('index', compact('todos'));
     }
