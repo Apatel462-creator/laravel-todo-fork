@@ -26,8 +26,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           echo "Checking pushed commits..."
-
-          FAILED=0
+           FAILED=0
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
 
