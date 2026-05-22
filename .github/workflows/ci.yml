@@ -25,19 +25,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+
           echo "Checking pushed commits..."
-           FAILED=0
+          FAILED=0
 
           if [[ "${{ github.event_name }}" == "push" ]]; then
 
-             # For push: only commits included in THIS push (provided by GitHub)
-            echo '${{ toJson(github.event.commits.*.message) }}' | jq -r '.[]' | while IFS= read -r commit; do
+            while IFS= read -r commit
+            do
+
               if [ -n "$commit" ]; then
+
                 echo "-----------------------------------"
                 echo "Checking: $commit"
-                bash scripts/commit_checker.sh "$commit" || FAILED=1
+              bash scripts/commit_checker.sh "$commit" || FAILED=1
+
               fi
-            done
+
+            done < <(
+              echo '${{ toJson(github.event.commits.*.message) }}' | jq -r '.[]'
+            )
 
           fi
 
@@ -47,10 +54,6 @@ jobs:
           fi
 
           echo "✅ All commit messages are valid."
-
-          fi
-
-          
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
