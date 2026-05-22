@@ -69,7 +69,6 @@ class TodoController extends Controller
         }
 
         Todo::create($validated);
-
         return redirect()
             ->route('todos.index')
             ->with('success', 'Todo created successfully.');
