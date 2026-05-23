@@ -2,6 +2,7 @@
 
 echo "Checking changed PHP files..."
 
+
 # Detect changed PHP files only
 FILES=$(git diff --name-only --diff-filter=ACM origin/main...HEAD | grep '\.php$')
 
