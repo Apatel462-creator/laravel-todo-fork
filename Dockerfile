@@ -25,6 +25,7 @@ RUN install-php-extensions \
     pcntl
 
 COPY --from=dependencies /app/vendor ./vendor
+
 COPY . .
 
 RUN mkdir -p storage/logs bootstrap/cache
