@@ -150,7 +150,6 @@ class TodoController extends Controller
     public function restore($id)
     {
         $todo = Todo::onlyTrashed()->findOrFail($id);
-
         $todo->restore();
 
         return redirect()
