@@ -164,7 +164,6 @@ class TodoController extends Controller
     public function markCompleted($id)
     {
         $todo = Todo::findOrFail($id);
-
         $todo->update([
             'status'       => 'completed',
             'is_completed' => true,
