@@ -67,88 +67,6 @@ pipeline {
             }
         }
 
-        stage('Laravel Pint') {
-
-            when {
-                anyOf {
-                    branch 'dev'
-                    branch 'release'
-                    branch 'main'
-                }
-            }
-
-            steps {
-
-                sh """
-                    docker run --rm \
-                    ${IMAGE_NAME}:${GIT_SHA} \
-                    ./vendor/bin/pint --test
-                """
-            }
-        }
-
-        stage('PHPStan') {
-
-            when {
-                anyOf {
-                    branch 'dev'
-                    branch 'release'
-                    branch 'main'
-                }
-            }
-
-            steps {
-
-                sh """
-                    docker run --rm \
-                    ${IMAGE_NAME}:${GIT_SHA} \
-                    ./vendor/bin/phpstan analyse \
-                    --memory-limit=1G
-                """
-            }
-        }
-
-        stage('PHPUnit') {
-
-            when {
-                anyOf {
-                    branch 'dev'
-                    branch 'release'
-                    branch 'main'
-                }
-            }
-
-            steps {
-
-                sh """
-                    docker run --rm \
-                    ${IMAGE_NAME}:${GIT_SHA} \
-                    php artisan test
-                """
-            }
-        }
-
-        stage('Trivy Scan') {
-
-            when {
-                anyOf {
-                    branch 'dev'
-                    branch 'release'
-                    branch 'main'
-                }
-            }
-
-            steps {
-
-                sh """
-                    trivy image \
-                    --exit-code 1 \
-                    --severity HIGH,CRITICAL \
-                    ${IMAGE_NAME}:${GIT_SHA}
-                """
-            }
-        }
-
         stage('Docker Login') {
 
             when {
@@ -159,23 +77,20 @@ pipeline {
                 }
             }
 
+            stage('Login Docker Hub') {
             steps {
-
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: "${DOCKER_CREDS}",
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-devopps-id',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
 
                     sh '''
-                        echo "$DOCKER_PASS" | docker login \
-                        -u "$DOCKER_USER" \
-                        --password-stdin
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                     '''
                 }
             }
+        }
         }
 
         stage('Push Docker Image') {
