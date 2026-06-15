@@ -169,7 +169,6 @@ class TodoController extends Controller
             'is_completed' => true,
             'completed_at' => now(),
         ]);
-
         return back()->with('success', 'Todo marked as completed.');
     }
 }
