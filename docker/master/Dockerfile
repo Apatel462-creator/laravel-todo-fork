@@ -7,7 +7,9 @@ COPY composer.json composer.lock ./
 RUN composer install \
     --prefer-dist \
     --no-interaction \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --no-scripts \
+    --no-dev
 
 
 FROM dunglas/frankenphp:php8.3
@@ -27,6 +29,8 @@ RUN install-php-extensions \
 COPY --from=dependencies /app/vendor ./vendor
 
 COPY . .
+
+RUN php artisan package:discover --ansi
 
 RUN mkdir -p storage/logs bootstrap/cache
 

@@ -150,7 +150,6 @@ class TodoController extends Controller
     public function restore($id)
     {
         $todo = Todo::onlyTrashed()->findOrFail($id);
-
         $todo->restore();
 
         return redirect()
@@ -169,7 +168,6 @@ class TodoController extends Controller
             'is_completed' => true,
             'completed_at' => now(),
         ]);
-
         return back()->with('success', 'Todo marked as completed.');
     }
 }
