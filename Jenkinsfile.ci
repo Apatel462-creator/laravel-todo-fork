@@ -3,7 +3,6 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME      = "staging"
         DOCKER_USERNAME = "amar462"
         DOCKER_CREDS    = "docker-devopps-id"
     }
@@ -31,35 +30,63 @@ pipeline {
             }
         }
 
-        stage('Get Git SHA') {
+        stage('Set Environment') {
             steps {
                 script {
+
+                    // Git SHA
                     env.GIT_SHA = sh(
                         script: 'git rev-parse --short HEAD',
                         returnStdout: true
                     ).trim()
 
-                    echo "Git SHA : ${env.GIT_SHA}"
+                    // branch ke hisaab se image name aur dockerfile set karo
+                    if (env.BRANCH_NAME == 'master') {
+                        env.IMAGE_NAME   = "production"
+                        env.DOCKERFILE   = "docker/master/Dockerfile"
+                        env.DEPLOY       = "true"        // CD chalega
+
+                    } else if (env.BRANCH_NAME == 'release/dev') {
+                        env.IMAGE_NAME   = "staging"
+                        env.DOCKERFILE   = "docker/dev/Dockerfile"
+                        env.DEPLOY       = "false"       // CD nahi chalega
+
+                    } else if (env.BRANCH_NAME == 'release/qa') {
+                        env.IMAGE_NAME   = "qa"
+                        env.DOCKERFILE   = "docker/qa/Dockerfile"
+                        env.DEPLOY       = "false"       // CD nahi chalega
+
+                    } else {
+                        // koi aur branch — sirf info print karo
+                        env.IMAGE_NAME   = "unknown"
+                        env.DOCKERFILE   = "Dockerfile"
+                        env.DEPLOY       = "false"
+                    }
+
+                    echo "Git SHA    : ${env.GIT_SHA}"
+                    echo "Image Name : ${env.IMAGE_NAME}"
+                    echo "Dockerfile : ${env.DOCKERFILE}"
+                    echo "Deploy     : ${env.DEPLOY}"
                 }
             }
         }
 
-        stage('Build Docker Image') {
+         // ── CI STAGES ──────────────────────────────────────────
 
+        stage('Build Docker Image') {
             when {
                 anyOf {
+                    branch 'master'
                     branch 'release/dev'
-                    branch 'main'
+                    branch 'release/qa'
                 }
             }
-
             steps {
-
                 sh """
                     docker build \
-                    -t ${IMAGE_NAME}:${GIT_SHA} .
+                        -f ${DOCKERFILE} \
+                        -t ${IMAGE_NAME}:${GIT_SHA} .
                 """
-
             }
         }
 
@@ -128,6 +155,20 @@ pipeline {
                     docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
                 """
 
+            }
+        }
+
+         // ── CD STAGE — SIRF MASTER PAR ─────────────────────────
+
+        stage('Deploy to Production') {
+             when {
+                anyOf {
+                    branch 'release/dev'
+                    branch 'main'
+                }
+            }
+            steps {
+                
             }
         }
     }
