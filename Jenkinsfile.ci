@@ -77,7 +77,6 @@ pipeline {
                 }
             }
 
-            stage('Login Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'docker-devopps-id',
@@ -90,7 +89,7 @@ pipeline {
                     '''
                 }
             }
-        }
+        
         }
 
         stage('Push Docker Image') {
