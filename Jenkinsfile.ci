@@ -3,13 +3,12 @@ pipeline {
     agent any
 
     environment {
-
-        IMAGE_NAME   = "dockerhub-user/laravel-app"
-        DOCKER_CREDS = "dockerhub-creds"
+        IMAGE_NAME      = "staging"
+        DOCKER_USERNAME = "amar462"
+        DOCKER_CREDS    = "docker-devopps-id"
     }
 
     options {
-
         timestamps()
         disableConcurrentBuilds()
 
@@ -28,20 +27,19 @@ pipeline {
 
         stage('Branch Info') {
             steps {
-                echo "Branch: ${env.BRANCH_NAME}"
+                echo "Branch : ${env.BRANCH_NAME}"
             }
         }
 
         stage('Get Git SHA') {
             steps {
                 script {
-
                     env.GIT_SHA = sh(
                         script: 'git rev-parse --short HEAD',
                         returnStdout: true
                     ).trim()
 
-                    echo "Git SHA: ${env.GIT_SHA}"
+                    echo "Git SHA : ${env.GIT_SHA}"
                 }
             }
         }
@@ -50,8 +48,7 @@ pipeline {
 
             when {
                 anyOf {
-                    branch 'dev'
-                    branch 'release'
+                    branch 'release/dev'
                     branch 'main'
                 }
             }
@@ -60,10 +57,9 @@ pipeline {
 
                 sh """
                     docker build \
-                    -t ${IMAGE_NAME}:${GIT_SHA} \
-                    -t ${IMAGE_NAME}:ci-${GIT_SHA} \
-                    .
+                    -t ${IMAGE_NAME}:${GIT_SHA} .
                 """
+
             }
         }
 
@@ -71,33 +67,55 @@ pipeline {
 
             when {
                 anyOf {
-                    branch 'dev'
-                    branch 'release'
+                    branch 'release/dev'
                     branch 'main'
                 }
             }
 
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-devopps-id',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "${DOCKER_CREDS}",
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
 
                     sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        echo "$DOCKER_PASS" | docker login \
+                        -u "$DOCKER_USER" \
+                        --password-stdin
                     '''
                 }
             }
-        
+        }
+
+        stage('Tag Docker Image') {
+
+            when {
+                anyOf {
+                    branch 'release/dev'
+                    branch 'main'
+                }
+            }
+
+            steps {
+
+                sh """
+                    docker tag ${IMAGE_NAME}:${GIT_SHA} ${DOCKER_USERNAME}/${IMAGE_NAME}:${GIT_SHA}
+
+                    docker tag ${IMAGE_NAME}:${GIT_SHA} ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
+                """
+
+            }
         }
 
         stage('Push Docker Image') {
 
             when {
                 anyOf {
-                    branch 'dev'
-                    branch 'release'
+                    branch 'release/dev'
                     branch 'main'
                 }
             }
@@ -105,18 +123,11 @@ pipeline {
             steps {
 
                 sh """
-                    docker push ${IMAGE_NAME}:${GIT_SHA}
+                    docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:${GIT_SHA}
+
+                    docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
                 """
 
-                sh """
-                    docker tag \
-                    ${IMAGE_NAME}:${GIT_SHA} \
-                    ${IMAGE_NAME}:latest
-                """
-
-                sh """
-                    docker push ${IMAGE_NAME}:latest
-                """
             }
         }
     }
@@ -124,18 +135,18 @@ pipeline {
     post {
 
         success {
-
-            echo "CI Pipeline Successful"
+            echo "✅ CI Pipeline Successful"
         }
 
         failure {
-
-            echo "CI Pipeline Failed"
+            echo "❌ CI Pipeline Failed"
         }
 
         always {
 
             sh '''
+                docker logout || true
+
                 docker image prune -f || true
             '''
 
