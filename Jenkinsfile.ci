@@ -168,7 +168,7 @@ pipeline {
                 }
             }
             steps {
-                
+                echo "deploy"
             }
         }
     }
